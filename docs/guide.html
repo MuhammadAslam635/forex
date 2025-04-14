@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)file:///C:/xampp/htdocs/v4_update/documentation-offline.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bicrypto Installation Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3, h4 {
+            color: #2563eb;
+            margin-top: 1.5em;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 1em;
+            color: #1e40af;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 2em 0;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            margin: 1em 0;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        ul, ol {
+            padding-left: 2em;
+        }
+        .header {
+            background-color: #2563eb;
+            color: white;
+            padding: 2em;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 2em;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+        }
+        .header p {
+            margin: 0.5em 0 0 0;
+            font-size: 1.2em;
+        }
+        .note {
+            background-color: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 1em;
+            margin: 1em 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .additional-notes {
+            background-color: #f7fee7;
+            border: 1px solid #84cc16;
+            padding: 1.5em;
+            border-radius: 5px;
+            margin: 2em 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Bicrypto Installation Guide</h1>
+        <p>Setting up Bicrypto on a Virtualmin-managed server using Apache</p>
+    </div>
+
+    <p>
+        This guide will walk you through setting up Bicrypto on a Virtualmin-managed server using Apache. The steps include uploading the Bicrypto zip file to your public_html folder, configuring Apache directives, and running the automated installer script.
+    </p>
+
+    <hr>
+    <h3>Preliminary Step: Download Bicrypto Zip from Envato</h3>
+    <p>
+        Download the Bicrypto zip file from your Envato account before proceeding.
+    </p>
+
+    <hr>
+    <h3>Step 1: Upload the Zip File</h3>
+    <p>
+        Navigate to <code>public_html</code> in your Virtualmin File Manager (or via SFTP/SSH) and upload the Bicrypto zip file.
+    </p>
+    <img src="./assets/200fc687-48b4-42a6-8a54-36c758b3ec16.png" alt="Upload zip file to public_html">
+
+    <hr>
+    <h3>Step 2: Extract the Zip File</h3>
+    <p>
+        Once uploaded, right-click on the Bicrypto zip file and choose <strong>Extract</strong> (or use SSH command <code>unzip &lt;filename.zip&gt;</code>).
+    </p>
+    <img src="./assets/2217951e-9de5-47d4-aa9c-ba6c87c9f44b.png" alt="Extract zip file">
+
+    <hr>
+    <h3>Step 3: Overwrite Existing Files (If Prompted)</h3>
+    <p>
+        If you see a prompt asking to overwrite existing files, click <strong>Yes</strong>. This ensures all relevant files are updated.
+    </p>
+    <img src="./assets/7b48c91f-7755-405b-9f0b-1864bcbb9b85.png" alt="Overwrite existing files">
+
+    <hr>
+    <h3>Step 4: Configure SSL Website (Apache Directives)</h3>
+    <p>
+        In Virtualmin, navigate to <strong>Web Configuration &gt; Configure SSL Website &gt; Edit Directives</strong>.
+    </p>
+    <img src="./assets/c8e7ef11-ca15-49af-b6d5-e9ef1ed88c34.png" alt="Configure SSL Website">
+    <p class="note">
+        <strong>Note</strong>: if you are using NGINX then follow these steps instead <a href="https://support.mash3div.com/hc/articles/1/2/4/nginx-configuration">NGINX Configuration</a> and then continue from Step 7
+    </p>
+
+    <hr>
+    <h3>Step 5: Add the Apache Configurations</h3>
+    <p>
+        After the line <code>DirectoryIndex</code>, add the following configurations. Then, click <strong>Save</strong> and <strong>Close</strong>.
+    </p>
+    <pre><code>Protocols h2 http/1.1
+ProxyPreserveHost On
+KeepAlive On
+KeepAliveTimeout 3
+MaxKeepAliveRequests 500
+ProxyTimeout 150
+AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css application/xml application/xhtml+xml application/rss+xml application/javascript application/x-javascript
+ProxyPass /api/docs http://localhost:4000/api/docs
+ProxyPassReverse /api/docs http://localhost:4000/api/docs
+
+ProxyPass /api http://localhost:4000/api
+ProxyPassReverse /api http://localhost:4000/api
+
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule ^/api/(.*) ws://localhost:4000/api/$1 [P,L]
+
+ProxyPass / http://localhost:3000/
+ProxyPassReverse / http://localhost:3000/
+
+&lt;Proxy "http://localhost:4000/"&gt;
+ProxySet max=70000
+&lt;/Proxy&gt;</code></pre>
+    <img src="./assets/859d0f2c-aa3c-476e-9a4d-63f3b0e00202.png" alt="Apache configurations">
+
+    <hr>
+    <h3>Step 6: Configure Website (Same Apache Directives)</h3>
+    <p>
+        Return to <strong>Web Configuration &gt; Configure Website &gt; Edit Directives</strong> and repeat the same configuration from Step 5. Save and close.
+    </p>
+
+    <hr>
+    <h3>Step 7: File Manager – Copy Path to Clipboard</h3>
+    <p>
+        Open <strong>File Manager</strong>, right-click on any file or folder, then choose <strong>Copy</strong>, followed by <strong>Copy Path to Clipboard</strong>. You'll need this path shortly.
+    </p>
+    <img src="./assets/616a7a49-3b9d-4e14-a29d-a73e67197a86.png" alt="Copy path to clipboard">
+
+    <hr>
+    <h3>Step 8: Open Root Terminal</h3>
+    <p>
+        Scroll down in the left sidebar of Virtualmin (or the top menu) to find the <strong>Root Terminal</strong> option. Click to open it.
+    </p>
+    <img src="./assets/bd0100d5-f6a6-48b0-93d5-f18a0ee3007e.png" alt="Open root terminal">
+
+    <hr>
+    <h3>Step 9: Navigate to <code>public_html</code></h3>
+    <p>
+        Paste the path you copied in step 7 to enter the Bicrypto folder. For example:
+    </p>
+    <pre><code>cd /path/to/public_html</code></pre>
+    <p>
+        Replace <code>/path/to/public_html</code> with your actual path from the clipboard.
+    </p>
+    <img src="./assets/7afd7cb4-a1eb-466d-a665-368c818eb80c.png" alt="Navigate to public_html">
+
+    <hr>
+    <h3>Step 10: Run the Automated Installer</h3>
+    <p>
+        Install <strong>dos2unix</strong>, convert the script if necessary, and run <code>installer.sh</code>:
+    </p>
+    <pre><code>sudo apt install dos2unix
+dos2unix installer.sh
+chmod +x installer.sh
+sudo bash installer.sh</code></pre>
+    <img src="./assets/f196a481-973a-4f5b-ba70-61d1cabf3b14.png" alt="Run automated installer">
+
+    <hr>
+    <h3>Step 11: Provide Site URL and Database Info</h3>
+    <p>
+        The installer will ask for your site URL. Enter it in the format <code>https://domain.com</code> without a trailing slash. It will also prompt for:
+    </p>
+    <ul>
+        <li>
+            <p>Site Name</p>
+        </li>
+        <li>
+            <p>Database Name</p>
+        </li>
+        <li>
+            <p>Database User</p>
+        </li>
+        <li>
+            <p>Password</p>
+        </li>
+        <li>
+            <p>Host (usually <code>localhost</code>)</p>
+        </li>
+        <li>
+            <p>Port (usually <code>3306</code> for MySQL)</p>
+        </li>
+    </ul>
+    <img src="./assets/de0fd7d3-d945-4971-b518-c3d2d185c7e4.png" alt="Provide site URL and database info">
+
+    <hr>
+    <h3>Step 12: Finish and Get Default Credentials</h3>
+    <p>
+        After the installer completes, it will display default credentials for the super admin user. <strong>Important:</strong> Update the super admin email via phpMyAdmin or another database tool (e.g., TablePlus).
+    </p>
+    <img src="./assets/46e2fe40-7023-4127-93c1-0edfdece0789.png" alt="Default credentials">
+
+    <hr>
+    <h3>Step 13: Close Root Terminal and Edit Virtual Server</h3>
+    <p>
+        Click the <strong>X</strong> to close the Root Terminal. Then return to your Virtualmin interface to edit the virtual server if needed.
+    </p>
+    <img src="./assets/d9f0292e-c581-4acd-a360-1d5dd06894a1.png" alt="Close root terminal">
+
+    <hr>
+    <h3>Step 14: Adjust Quotas (If Available)</h3>
+    <p>
+        In <strong>Edit Virtual Server</strong>, if you see <strong>Quotas and Limits</strong>, set both <strong>Total</strong> and <strong>Server</strong> quota to <em>Unlimited</em>. If you do not see this, you may skip this step.
+    </p>
+    <img src="./assets/80082c70-003e-4e57-bb12-7d84c2e772d6.png" alt="Adjust quotas">
+
+    <hr>
+    <h3>Step 15: Return to File Manager</h3>
+    <p>
+        Back in Virtualmin, open the <strong>File Manager</strong> again.
+    </p>
+    <img src="./assets/33664491-1306-4761-b35b-238ad5147fc5.png" alt="Return to file manager">
+
+    <hr>
+    <h3>Step 16: Adjust File Ownership</h3>
+    <p>
+        Right-click on any folder/file that isn't owned by <code>root:root</code> and choose <strong>Select All</strong> from the top notification to ensure all necessary files are selected.
+    </p>
+    <img src="./assets/de942141-1582-4752-9243-41b6e06acb9c.png" alt="Adjust file ownership">
+
+    <hr>
+    <h3>Step 17: Confirm Selection of All Pages</h3>
+    <p>
+        Click <strong>Yes</strong> on the top notification to select all files across all pages in the File Manager (if applicable).
+    </p>
+    <img src="./assets/fcee7aa4-80c2-45a6-873b-9c967c520f2b.png" alt="Confirm selection">
+
+    <hr>
+    <h3>Step 18: Change Properties</h3>
+    <p>
+        Right-click on any file that doesn't have <code>root:root</code> as the owner, then choose <strong>Properties</strong> to change file ownership.
+    </p>
+    <img src="./assets/97ce06c0-d6c0-4583-8993-4304b5487ac3.png" alt="Change properties">
+
+    <hr>
+    <h3>Step 19: Assign Correct Ownership</h3>
+    <p>
+        In the <strong>Username</strong> and <strong>Group Name</strong> fields, specify the correct Virtualmin user and group. This will trigger a <strong>Recursive</strong> checkbox – check it, then click <strong>Change</strong> to apply it to all subdirectories and files.
+    </p>
+    <img src="./assets/bd532c9a-03b1-45db-8d4c-26cede31b658.png" alt="Assign correct ownership">
+
+    <hr>
+    <h3>Step 20: Open the User Terminal</h3>
+    <p>
+        Below the File Manager, you'll see a <strong>User Terminal</strong>. Click to open it, then navigate again to <code>public_html</code>:
+    </p>
+    <pre><code>cd public_html</code></pre>
+    <img src="./assets/e44b7992-6e5b-4790-97f9-cd7984f86ead.png" alt="Open user terminal">
+
+    <hr>
+    <h3>Step 21: Install Dependencies (Frontend)</h3>
+    <p>
+        Run <code>pnpm install</code> to install frontend dependencies for Bicrypto. If prompted for confirmation, press <strong>Enter</strong>.
+    </p>
+    <pre><code>pnpm install</code></pre>
+    <img src="./assets/799b772e-a753-42a8-98e1-8397af0d4751.png" alt="Install dependencies">
+
+    <hr>
+    <h3>Step 22: Start the Application</h3>
+    <p>
+        Finally, start the Bicrypto application:
+    </p>
+    <pre><code>pnpm start</code></pre>
+    <p>
+        Wait about 20 seconds for the build and server to initialize. Your site should then be accessible at the domain you configured.
+    </p>
+    <img src="./assets/926dc31c-6033-4a88-ac6e-275a57e8d53d.png" alt="Start application">
+
+    <hr>
+    <div class="additional-notes">
+        <h2>Additional Notes &amp; Suggestions</h2>
+        <ul>
+            <li>
+                <p>
+                    <strong>Check Permissions and Ownership:</strong> If you encounter permission errors, ensure your <code>public_html</code> folder and Bicrypto files are owned by the same Virtualmin user/group.
+                </p>
+            </li>
+            <li>
+                <p>
+                    <strong>Use SSL Certificates:</strong> Properly install SSL certificates in Virtualmin for HTTPS support (including forced redirects if desired).
+                </p>
+            </li>
+            <li>
+                <p>
+                    <strong>Monitor System Resources:</strong> For high traffic or frequent trading queries, consider increasing RAM/CPU or implementing a load balancer setup.
+                </p>
+            </li>
+            <li>
+                <p>
+                    <strong>Security Best Practices:</strong> Keep your server up to date, configure firewalls, and consider fail2ban or other intrusion-prevention tools.
+                </p>
+            </li>
+        </ul>
+    </div>
+
+    <footer style="text-align: center; margin-top: 3em; padding-top: 1em; border-top: 1px solid #e5e7eb; color: #6b7280;">
+        <p>Bicrypto Installation Guide - Offline Documentation</p>
+        <p>Original source: <a href="https://support.mash3div.com/">https://support.mash3div.com/</a></p>
+    </footer>
+
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Payment Redirect</title>
+    <!-- 
+      Note: The apple-itunes-app meta tag is static. If you need to update it dynamically,
+      you can do so via JavaScript, but typically you’d configure it with your production values.
+    -->
+    <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID, app-argument=https://yourdomain.com/stripe-app-redirect">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <script>
+      window.onload = function () {
+        const queryParams = new URLSearchParams(window.location.search);
+        const sessionId = queryParams.get('sessionId');
+        // Optional: use a "type" parameter to distinguish flows (e.g., success or cancel)
+        const type = queryParams.get('type') || 'success';
+        
+        // Use the current domain (including protocol and port) for the universal link
+        const universalLink = `${window.location.origin}/stripe-app-redirect.html?sessionId=${sessionId}&type=${type}`;
+        
+        // Redirect to the universal link URL
+        window.location.href = universalLink;
+      };
+    </script>
+    
+    <p>Redirecting to your app...</p>
+    <p>If you are not redirected automatically, please <a id="fallbackLink" href="#">click here</a>.</p>
+    
+    <script>
+      // Update the fallback link as well using the current domain.
+      const queryParams = new URLSearchParams(window.location.search);
+      const sessionId = queryParams.get('sessionId');
+      const type = queryParams.get('type') || 'success';
+      const universalLink = `${window.location.origin}/stripe-app-redirect.html?sessionId=${sessionId}&type=${type}`;
+      document.getElementById('fallbackLink').href = universalLink;
+    </script>
+  </body>
+</html>
