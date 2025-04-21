@@ -48,7 +48,7 @@ public/blockchains/bsc/assets/CON/logo.webp
 # skip all zip files and sql
 *.zip
 *.rar
-
+./
 
 # skip public/uploads
 public/uploads/*
